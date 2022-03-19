@@ -1,0 +1,24 @@
+{
+  "name": "renemail",
+  "version": "1.0.0",
+  "description": "Rename email files based on their content",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Tyler Peterson <stronglytyped@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^9.1.0",
+    "date-fns": "^2.28.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.2.0"
+  }
+}
