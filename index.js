@@ -20,7 +20,7 @@ async function renemail () {
   filePromises.forEach(async function (filePromise, i) {
     const file = await filePromise
     const filename = filenames[i]
-    const foundDate = file.match(/^Date: \w+, (.*\d{4})( \(\w+\))?$/m)[1]
+    const foundDate = file.match(/^Date: (?:\w+, )?(.*\d{4})( \(\w+\))?$/m)[1]
     const date = parse(foundDate, 'd LLL yyyy HH:mm:ss XXXX', new Date())
     const fileDateTime = format(date, 'yyyy-MM-dd-HH-mm')
     const foundSubject = file.match(/^Subject: (.*)$/m)[1]
