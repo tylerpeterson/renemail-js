@@ -3,14 +3,18 @@
 import { program } from 'commander'
 import { readFile, rename } from 'fs/promises'
 import { parse, format } from 'date-fns'
-import { join, dirname, extname } from 'path'
+import { join, dirname, basename, extname } from 'path'
 
 async function renemail () {
   program
     .description('Rename an email file based on its contents.')
   program.parse()
 
+  const startsWithDateTime = /^\d{4}-\d{2}-\d{2}-\d{2}-\d{2}/
+
   const filenames = program.args
+      .filter(name => extname(name) === '.eml')
+      .filter(name => !startsWithDateTime.test(basename(name)))
   const filePromises = filenames.map(filename => readFile(filename, { encoding: 'utf8' }))
   const renamePromises = []
   filePromises.forEach(async function (filePromise, i) {
