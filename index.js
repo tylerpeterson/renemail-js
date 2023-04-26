@@ -10,6 +10,7 @@ program
   .option('-d, --debug', "print extra debug information")
   .option('-s, --silent', "don't report on file renames")
   .option('-f, --format <number>', 'which format should we use for renaming? 1 or 2', 1)
+  .option('-F, --force', "don't skip files that appear to start with a date.")
   .description('Rename an email file based on its contents.')
 program.parse(process.argv)
 
@@ -18,6 +19,7 @@ const DRY_RUN = !!options.dryRun
 const DEBUG = !!options.debug
 const SILENT = !!options.silent
 const FORMAT = options.format
+const FORCE = !!options.force
 const startsWithDateTime = /^(?:\d{4}-\d{2}-\d{2}-\d{2}-\d{2}|\d{6}-\d{4}) /
 
 if (FORMAT < 0 || FORMAT > 2) {
@@ -30,7 +32,7 @@ DEBUG && console.log(`options: `, options)
 async function renemail () {
   const filenames = program.args
       .filter(name => extname(name) === '.eml')
-      .filter(name => !startsWithDateTime.test(basename(name)))
+      .filter(name => FORCE || !startsWithDateTime.test(basename(name)))
   const filePromises = filenames.map(filename => readFile(filename, { encoding: 'utf8' }))
   const renamePromises = []
   filePromises.forEach(async function (filePromise, i) {
