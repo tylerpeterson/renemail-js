@@ -9,6 +9,7 @@ program
   .option('-D, --dry-run', "report what would be changed; don't make any changes")
   .option('-d, --debug', "print extra debug information")
   .option('-s, --silent', "don't report on file renames")
+  .option('-f, --format <number>', 'which format should we use for renaming? 1 or 2', 1)
   .description('Rename an email file based on its contents.')
 program.parse(process.argv)
 
@@ -16,7 +17,13 @@ const options = program.opts()
 const DRY_RUN = !!options.dryRun
 const DEBUG = !!options.debug
 const SILENT = !!options.silent
-const startsWithDateTime = /^\d{4}-\d{2}-\d{2}-\d{2}-\d{2}/
+const FORMAT = options.format
+const startsWithDateTime = /^(?:\d{4}-\d{2}-\d{2}-\d{2}-\d{2}|\d{6}-\d{4}) /
+
+if (FORMAT < 0 || FORMAT > 2) {
+  console.error(`Unsupported format: ${FORMAT}. Format must be either 1 or 2`)
+  process.exit(1)
+}
 
 DEBUG && console.log(`options: `, options)
 
@@ -30,20 +37,18 @@ async function renemail () {
     const filename = filenames[i]
     try {
       const file = await filePromise
+
       DEBUG && console.log(`processing ${filename}...`)
-      const foundDate = file.match(/^Date: (?:\w+, )?(.*\d{4})( \(\w+\))?$/m)[1]
-      const date = parse(foundDate, 'd LLL yyyy HH:mm:ss XXXX', new Date())
-      const fileDateTime = format(date, 'yyyy-MM-dd-HH-mm')
-      const foundSubject = findSubject(file)
-      const simpleSubject = foundSubject.replace(/\W+/g, '_').substring(0, 65)
-      const ext = extname(filename)
-      const newName = `${fileDateTime} ${simpleSubject}${ext}`
+
+      const newName = computeName(file, filename)
       const newPath = join(dirname(filename), newName)
+
       if (!DRY_RUN) {
         renamePromises.push(rename(filename, newPath))
       }
   
       SILENT || console.log(`mv ${filename} ${newPath}`)
+      
     } catch (err) {
       console.error(`ERR processing ${filename}.\n`, err)
     }
@@ -54,6 +59,26 @@ const plainSubjectPattern = /^Subject: (.*)$/mi
 const rfc1342SubjectPattern = /^Subject:(?:\r\n|\r|\n)/mi
 const rfc1342EncodedPattern = /^ [=][?]utf[-]8[?](?<encoding>[BQ])[?](?<content>.*)[?][=](?:\r\n|\r|\n)/my
 const CONTEXT_CHARS_COUNT = 85
+
+function computeName(file, filename) {
+  const fileDateTime = computeDate(file)
+  const foundSubject = findSubject(file)
+  const simpleSubject = foundSubject.replace(/\W+/g, '_').substring(0, 65)
+  const ext = extname(filename)
+  const newName = `${fileDateTime} ${simpleSubject}${ext}`
+  return newName
+}
+
+const DATE_FORMATS = [
+  'yyyy-MM-dd-HH-mm',
+  'yyMMdd-HHmm'
+]
+
+function computeDate(file) {
+  const foundDate = file.match(/^Date: (?:\w+, )?(.*\d{4})( \(\w+\))?$/m)[1]
+  const date = parse(foundDate, 'd LLL yyyy HH:mm:ss XXXX', new Date())
+  return format(date, DATE_FORMATS[FORMAT - 1])
+}
 
 function findSubject(text) {
   const plainMatch = plainSubjectPattern.exec(text)
