@@ -109,7 +109,7 @@ function getHeader(email, name) {
   return value
 }
 
-function decodeRfc1342(input) {
+export function decodeRfc1342(input) {
   DEBUG && console.log(`detecting and decoding encoded data in "${input}"`)
   let value = ''
   const pat1342 = /(?<prefix>.*?)=\?utf-8\?(?<encoding>[BQ])\?(?<encodedText>[^ "(),./\[-\]:-<>-@\r\n]{1,75})\?=/iy

@@ -1,4 +1,4 @@
-import { findSubject, decodeQEncoding } from ".";
+import { findSubject, decodeRfc1342, decodeQEncoding } from ".";
 
 const b64SubjectMsg = `MIME-Version: 1.0
 Subject:
@@ -29,6 +29,18 @@ describe('findSubject', () => {
     
     it('finds subjects with mixed encoding', () => {
         expect(findSubject(mixedSubjectMsg)).toBe('[Ext:] WORDS1234 Dude!?')
+    })
+})
+
+describe('decodeRfc1342', () => {
+    it('decodes base64 encoded data', () => {
+        expect(decodeRfc1342('=?utf-8?B?W0V4dDpdIFdPUkRTMTIz?=')).toBe('[Ext:] WORDS123')
+    })
+    it('decodes Q-encoded data', () => {
+        expect(decodeRfc1342('=?utf-8?Q?word?=')).toBe('word')
+    })
+    it('decodes multiple encoded words in sequence', () => {
+        expect(decodeRfc1342('=?utf-8?Q?aeiou?= plus =?utf-8?B?w6XDpMO2?=')).toBe('aeiou plus åäö')
     })
 })
 
