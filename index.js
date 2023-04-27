@@ -73,7 +73,7 @@ function computeName(file, filename) {
 function summarizeSubject(file) {
   const foundSubject = findSubject(file)
   let summary = foundSubject.replace(/\W+/g, '_')
-  summary = summary.replace(/^_?((Re|Fwd|Fw|Ext)_?)+_?/gi, '')
+  summary = summary.replace(/^_?((Re|Fwd|Fw|Ext)_)+_?/gi, '')
   summary = summary.substring(0, 45)
   return summary
 }
