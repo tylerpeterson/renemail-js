@@ -128,7 +128,7 @@ function decodeRfc1342(input) {
       DEBUG && console.log(`base64 decoded utf8 data: "${decoded}"`)
       value += decoded
     } else if (encoding === 'Q') {
-      const decoded = decodeQEncoding(encodedText.replaceAll('_', ' '))
+      const decoded = decodeQEncoding(encodedText)
       DEBUG && console.log(`unquoted utf8 data: "${decoded}"`)
       value += decoded
     }
@@ -139,7 +139,8 @@ function decodeRfc1342(input) {
 }
 DEBUG && console.log(``)
 
-function decodeQEncoding(input) {
+export function decodeQEncoding(input) {
+  input = input.replaceAll('_', ' ')
   let value = ''
   const pat1341 = /(?<prefix>.*?)=(?<hexByte>[0-F]{2})/iy
   let match = pat1341.exec(input)
