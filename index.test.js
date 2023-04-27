@@ -1,4 +1,4 @@
-import { findSubject, decodeRfc1342, decodeQEncoding } from ".";
+import { getHeader, findSubject, decodeRfc1342, decodeQEncoding } from ".";
 
 const b64SubjectMsg = `MIME-Version: 1.0
 Subject:
@@ -18,6 +18,20 @@ Subject:
  =?utf-8?Q?4_Dude=21=3F?=
 From: John <john@example.com>
 `
+
+const fromMsg = `MIME-Version: 1.0
+Subject: Test Subject
+From: =?utf-8?q?A=E2=80=93Z=E2=80=98_?=
+ <noreply@example.com>
+To: petersontb@familysearch.org
+`
+
+describe('get sender', () => {
+    it('finds and decodes sender', () => {
+        expect(getHeader(fromMsg, 'From')).toBe('A–Z‘ <noreply@example.com>')
+    })
+})
+
 describe('findSubject', () => {
     it('finds plain subjects', () => {
         expect(findSubject(plainSubjectMsg)).toBe('Hello there!')
@@ -55,5 +69,9 @@ describe('decodeQEncoding', () => {
 
     it('decodes hex values for =, _, and ?', ()=> {
         expect(decodeQEncoding('=3D=5F=3F')).toBe('=_?')
+    })
+
+    it('decodes multibyte unicode beyond ascii', () => {
+        expect(decodeQEncoding('=E2=80=93=20=E2=80=98=3D=5F=3F')).toBe('– ‘=_?')
     })
 })

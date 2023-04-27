@@ -79,7 +79,7 @@ function computeDate(file) {
 
 const ENDINGS_PATTERN = /\r\n|\r|\n/
 
-function getHeader(email, name) {
+export function getHeader(email, name) {
   DEBUG && console.log(`getHeader ${name}`)
   let value = null
   const lines = email.split(ENDINGS_PATTERN)
@@ -124,8 +124,10 @@ export function decodeRfc1342(input) {
 
 export function decodeQEncoding(input) {
   input = input.replaceAll('_', ' ')
-  return decodeHelper(input, /(?<prefix>.*?)=(?<hexByte>[0-F]{2})/iy, (match) => {
-    return Buffer.from(match.groups.hexByte, 'hex').toString('utf8')
+  return decodeHelper(input, /(?<prefix>.*?)(?<hexBytes>(?:=[0-F]{2})+)/iy, (match) => {
+    const byteArray = match.groups.hexBytes.split('=')
+    byteArray.shift() // Discard empty string before the first equal sign
+    return Buffer.from(byteArray.join(''), 'hex').toString('utf8')
   })
 }
 
