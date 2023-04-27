@@ -82,7 +82,89 @@ function computeDate(file) {
   return format(date, DATE_FORMATS[FORMAT - 1])
 }
 
-function findSubject(text) {
+const ENDINGS_PATTERN = /\r\n|\r|\n/
+
+function getHeader(email, name) {
+  DEBUG && console.log(`getHeader ${name}`)
+  let value = null
+  const lines = email.split(ENDINGS_PATTERN)
+  DEBUG && console.log(`scanning ${lines.length} lines`)
+  const headerPattern = new RegExp(`^${name}: ?`, 'i')
+  for (let i = 0; i < lines.length; ++i) {
+    let line = lines[i]
+    const match = headerPattern.exec(line)
+    if (match !== null) {
+      DEBUG && console.log(`line ${i} found "${name}" in "${line}"`)
+      const rawValue = line.slice(match[0].length)
+      DEBUG && console.log(`discarding header name leaves "${rawValue}"`)
+      value = decodeRfc1342(rawValue)
+      for (let j = i + 1; j < lines.length; ++j) {
+        line = lines[j]
+        DEBUG && console.log(`checking for continued value on line ${j}, "${line}"`)
+        if (!line.startsWith(' ')) {
+          DEBUG && console.log(`line doesn't start with a space. terminating value scan`)
+          break
+        }
+        value += decodeRfc1342(line.slice(1))
+      }
+      break
+    }
+  }
+
+  return value
+}
+
+function decodeRfc1342(input) {
+  DEBUG && console.log(`detecting and decoding encoded data in "${input}"`)
+  let value = ''
+  const pat1342 = /^(?<prefix>.*?)=\?utf-8\?(?<encoding>[BQ])\?(?<encodedText>[^ "(),./\[-\]:-@\r\n]{1,75})\?=/iy
+  let match = pat1342.exec(input)
+  let usedChars = 0
+  while (match !== null) {
+    usedChars = match.index + match[0].length
+    pat1342.lastIndex = usedChars
+    const prefix = match.groups.prefix
+    DEBUG && console.log(`appending this unencoded data to the value: "${prefix}"`)
+    value += prefix
+    const encoding = match.groups.encoding.toUpperCase()
+    const encodedText = match.groups.encodedText
+    if (encoding === 'B') {
+      const decoded = Buffer.from(encodedText, 'base64').toString('utf8')
+      DEBUG && console.log(`base64 decoded utf8 data: "${decoded}"`)
+      value += decoded
+    } else if (encoding === 'Q') {
+      const decoded = decodeQEncoding(encodedText.replaceAll('_', ' '))
+      DEBUG && console.log(`unquoted utf8 data: "${decoded}"`)
+      value += decoded
+    }
+    match = pat1342.exec(input)
+  }
+  value += input.slice(usedChars)
+  return value
+}
+DEBUG && console.log(``)
+
+function decodeQEncoding(input) {
+  let value = ''
+  const pat1341 = /^(?<prefix>.*?)=(?<hexByte>[0-F]{2})/iy
+  let match = pat1341.exec(input)
+  let usedChars = 0
+  while (match !== null) {
+    usedChars = match.index + match[0].length
+    pat1341.lastIndex = usedChars
+    value += match.groups.prefix
+    value += Buffer.from(match.groups.hexByte, 'hex').toString('utf8')
+    match = pat1341.exec(input)
+  }
+  value += input.slice(usedChars)
+  return value
+}
+
+export function findSubject(text) {
+  return getHeader(text, 'subject')
+}
+
+export function findSubject2(text) {
   const plainMatch = plainSubjectPattern.exec(text)
   if (plainMatch) {
     DEBUG && console.log(`found plain subject header ${plainMatch[0]}`)
