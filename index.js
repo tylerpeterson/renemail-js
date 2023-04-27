@@ -129,7 +129,7 @@ export function decodeQEncoding(input) {
   })
 }
 
-function decodeHelper(rawString, stickyPattern, decodeFunction) {
+function decodeHelper(rawString, stickyPattern, decoder) {
   let result = ''
   let match = stickyPattern.exec(rawString)
   let usedChars = 0
@@ -137,7 +137,7 @@ function decodeHelper(rawString, stickyPattern, decodeFunction) {
     usedChars = match.index + match[0].length
     stickyPattern.lastIndex = usedChars
     result += match?.groups?.prefix || ''
-    result += decodeFunction(match)
+    result += decoder(match)
     match = stickyPattern.exec(rawString)
   }
   result += rawString.slice(usedChars)
