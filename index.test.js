@@ -37,7 +37,7 @@ describe('get sender', () => {
     })
 
     it('summarizes sender', () => {
-        expect(summarizeFrom(fromMsg2)).toBe('John J-example.com')
+        expect(summarizeFrom(fromMsg2)).toBe('JohnJa-example.com')
     })
 })
 

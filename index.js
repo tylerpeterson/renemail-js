@@ -72,9 +72,9 @@ function computeName(file, filename) {
 }
 
 export function summarizeFrom(email) {
-  const sender = getHeader(email, 'From').replaceAll(/[^-_ @a-z0-9.]/ig, '')
+  const sender = getHeader(email, 'From').replaceAll(/[^@a-z0-9.]/ig, '')
   const domain = sender.split('@')[1]
-  return `${sender.slice(0, 6)}-${domain.split('.').slice(-2).join('.')}`
+  return `${sender.slice(0, 6)}-${domain.split('.').slice(-2).join('.').slice(0, 12)}`
 }
 
 const DATE_FORMATS = [
