@@ -110,50 +110,38 @@ function getHeader(email, name) {
 }
 
 export function decodeRfc1342(input) {
-  DEBUG && console.log(`detecting and decoding encoded data in "${input}"`)
-  let value = ''
-  const pat1342 = /(?<prefix>.*?)=\?utf-8\?(?<encoding>[BQ])\?(?<encodedText>[^ "(),./\[-\]:-<>-@\r\n]{1,75})\?=/iy
-  let match = pat1342.exec(input)
-  let usedChars = 0
-  while (match !== null) {
-    usedChars = match.index + match[0].length
-    pat1342.lastIndex = usedChars
-    const prefix = match.groups.prefix
-    DEBUG && console.log(`appending this unencoded data to the value: "${prefix}"`)
-    value += prefix
+  const pattern = /(?<prefix>.*?)=\?utf-8\?(?<encoding>[BQ])\?(?<encodedText>[^ "(),./\[-\]:-<>-@\r\n]{1,75})\?=/iy
+  return decodeHelper(input, pattern, (match) => {
     const encoding = match.groups.encoding.toUpperCase()
     const encodedText = match.groups.encodedText
     if (encoding === 'B') {
-      const decoded = Buffer.from(encodedText, 'base64').toString('utf8')
-      DEBUG && console.log(`base64 decoded utf8 data: "${decoded}"`)
-      value += decoded
+      return Buffer.from(encodedText, 'base64').toString('utf8')
     } else if (encoding === 'Q') {
-      const decoded = decodeQEncoding(encodedText)
-      DEBUG && console.log(`unquoted utf8 data: "${decoded}"`)
-      value += decoded
+      return decodeQEncoding(encodedText)
     }
-    match = pat1342.exec(input)
-  }
-  value += input.slice(usedChars)
-  return value
+  })
 }
-DEBUG && console.log(``)
 
 export function decodeQEncoding(input) {
   input = input.replaceAll('_', ' ')
-  let value = ''
-  const pat1341 = /(?<prefix>.*?)=(?<hexByte>[0-F]{2})/iy
-  let match = pat1341.exec(input)
+  return decodeHelper(input, /(?<prefix>.*?)=(?<hexByte>[0-F]{2})/iy, (match) => {
+    return Buffer.from(match.groups.hexByte, 'hex').toString('utf8')
+  })
+}
+
+function decodeHelper(rawString, stickyPattern, decodeFunction) {
+  let result = ''
+  let match = stickyPattern.exec(rawString)
   let usedChars = 0
   while (match !== null) {
     usedChars = match.index + match[0].length
-    pat1341.lastIndex = usedChars
-    value += match.groups.prefix
-    value += Buffer.from(match.groups.hexByte, 'hex').toString('utf8')
-    match = pat1341.exec(input)
+    stickyPattern.lastIndex = usedChars
+    result += match?.groups?.prefix || ''
+    result += decodeFunction(match)
+    match = stickyPattern.exec(rawString)
   }
-  value += input.slice(usedChars)
-  return value
+  result += rawString.slice(usedChars)
+  return result
 }
 
 export function findSubject(text) {
