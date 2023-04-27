@@ -59,8 +59,7 @@ async function renemail () {
 
 function computeName(file, filename) {
   const fileDateTime = computeDate(file)
-  const foundSubject = findSubject(file)
-  const simpleSubject = foundSubject.replace(/\W+/g, '_').substring(0, 45)
+  const simpleSubject = summarizeSubject(file)
   const ext = extname(filename)
   let newName
   if (FORMAT === 1) {
@@ -69,6 +68,14 @@ function computeName(file, filename) {
     newName = `${fileDateTime} ${summarizeFrom(file)} ${simpleSubject}${ext}`    
   }
   return newName
+}
+
+function summarizeSubject(file) {
+  const foundSubject = findSubject(file)
+  let summary = foundSubject.replace(/\W+/g, '_')
+  summary = summary.replace(/^_?((Re|Fwd|Fw|Ext)_?)+_?/gi, '')
+  summary = summary.substring(0, 45)
+  return summary
 }
 
 export function summarizeFrom(email) {
