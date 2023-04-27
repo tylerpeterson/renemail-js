@@ -60,10 +60,21 @@ async function renemail () {
 function computeName(file, filename) {
   const fileDateTime = computeDate(file)
   const foundSubject = findSubject(file)
-  const simpleSubject = foundSubject.replace(/\W+/g, '_').substring(0, 65)
+  const simpleSubject = foundSubject.replace(/\W+/g, '_').substring(0, 45)
   const ext = extname(filename)
-  const newName = `${fileDateTime} ${simpleSubject}${ext}`
+  let newName
+  if (FORMAT === 1) {
+    newName = `${fileDateTime} ${simpleSubject}${ext}`
+  } else {
+    newName = `${fileDateTime} ${summarizeFrom(file)} ${simpleSubject}${ext}`    
+  }
   return newName
+}
+
+export function summarizeFrom(email) {
+  const sender = getHeader(email, 'From').replaceAll(/[^-_ @a-z0-9.]/ig, '')
+  const domain = sender.split('@')[1]
+  return `${sender.slice(0, 6)}-${domain.split('.').slice(-2).join('.')}`
 }
 
 const DATE_FORMATS = [

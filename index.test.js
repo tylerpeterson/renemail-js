@@ -1,4 +1,4 @@
-import { getHeader, findSubject, decodeRfc1342, decodeQEncoding } from ".";
+import { getHeader, summarizeFrom, findSubject, decodeRfc1342, decodeQEncoding } from ".";
 
 const b64SubjectMsg = `MIME-Version: 1.0
 Subject:
@@ -23,12 +23,21 @@ const fromMsg = `MIME-Version: 1.0
 Subject: Test Subject
 From: =?utf-8?q?A=E2=80=93Z=E2=80=98_?=
  <noreply@example.com>
-To: petersontb@familysearch.org
+To: jane@example.com
+`
+const fromMsg2 = `MIME-Version: 1.0
+Subject: Test Subject
+From: John Jacob Jingleheimer Schmidt <jjjs@sub2.sub1.example.com>
+To: jane@example.com
 `
 
 describe('get sender', () => {
     it('finds and decodes sender', () => {
         expect(getHeader(fromMsg, 'From')).toBe('A–Z‘ <noreply@example.com>')
+    })
+
+    it('summarizes sender', () => {
+        expect(summarizeFrom(fromMsg2)).toBe('John J-example.com')
     })
 })
 
