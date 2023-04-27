@@ -57,11 +57,6 @@ async function renemail () {
   })
 }
 
-const plainSubjectPattern = /^Subject: (.*)$/mi
-const rfc1342SubjectPattern = /^Subject:(?:\r\n|\r|\n)/mi
-const rfc1342EncodedPattern = /^ [=][?]utf[-]8[?](?<encoding>[BQ])[?](?<content>.*)[?][=](?:\r\n|\r|\n)/my
-const CONTEXT_CHARS_COUNT = 85
-
 function computeName(file, filename) {
   const fileDateTime = computeDate(file)
   const foundSubject = findSubject(file)
@@ -117,7 +112,7 @@ function getHeader(email, name) {
 function decodeRfc1342(input) {
   DEBUG && console.log(`detecting and decoding encoded data in "${input}"`)
   let value = ''
-  const pat1342 = /^(?<prefix>.*?)=\?utf-8\?(?<encoding>[BQ])\?(?<encodedText>[^ "(),./\[-\]:-@\r\n]{1,75})\?=/iy
+  const pat1342 = /(?<prefix>.*?)=\?utf-8\?(?<encoding>[BQ])\?(?<encodedText>[^ "(),./\[-\]:-<>-@\r\n]{1,75})\?=/iy
   let match = pat1342.exec(input)
   let usedChars = 0
   while (match !== null) {
@@ -146,7 +141,7 @@ DEBUG && console.log(``)
 
 function decodeQEncoding(input) {
   let value = ''
-  const pat1341 = /^(?<prefix>.*?)=(?<hexByte>[0-F]{2})/iy
+  const pat1341 = /(?<prefix>.*?)=(?<hexByte>[0-F]{2})/iy
   let match = pat1341.exec(input)
   let usedChars = 0
   while (match !== null) {
@@ -162,42 +157,6 @@ function decodeQEncoding(input) {
 
 export function findSubject(text) {
   return getHeader(text, 'subject')
-}
-
-export function findSubject2(text) {
-  const plainMatch = plainSubjectPattern.exec(text)
-  if (plainMatch) {
-    DEBUG && console.log(`found plain subject header ${plainMatch[0]}`)
-    return plainMatch[1]
-  }
-  const encodedMatch = rfc1342SubjectPattern.exec(text)
-  if (encodedMatch) {
-    DEBUG && console.log(`found rfc 1342 encoded subject header`)
-    const headerText = encodedMatch[0]
-    const startIndex = encodedMatch.index + headerText.length
-    DEBUG && console.log(`searching for encoded content starting at ${startIndex}\n${text.slice(startIndex, startIndex + CONTEXT_CHARS_COUNT)}...`)
-    rfc1342EncodedPattern.lastIndex = startIndex
-    let subject = ''
-    let headerMatch
-    while (headerMatch = rfc1342EncodedPattern.exec(text)) {
-      const encoding = headerMatch.groups.encoding
-      DEBUG && console.log(`found ${encoding}-encoded content`)
-      if (encoding === 'Q') {
-        const quoted = headerMatch.groups.content
-        DEBUG && console.log(`found quoted text '${quoted}'`)
-        subject += quoted.replaceAll('_', ' ')
-      } else {
-        const encoded = headerMatch.groups.content
-        DEBUG && console.log(`found base64 encoded content '${encoded}'`)
-        const plain = Buffer.from(encoded, 'base64').toString('utf8')
-        DEBUG && console.log(`decoded text '${plain}'`)
-        subject += plain
-      }
-    }
-    DEBUG && console.log(`decoded rfc 1342 encoded subject: '${subject}'`)
-    return subject
-  }
-
 }
 
 renemail()
