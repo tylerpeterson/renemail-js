@@ -1,4 +1,4 @@
-import { getHeader, summarizeFrom, findSubject, decodeRfc1342, decodeQEncoding } from ".";
+import { getHeader, summarizeFrom, findSubject } from ".";
 
 const b64SubjectMsg = `MIME-Version: 1.0
 Subject:
@@ -52,35 +52,5 @@ describe('findSubject', () => {
     
     it('finds subjects with mixed encoding', () => {
         expect(findSubject(mixedSubjectMsg)).toBe('[Ext:] WORDS1234 Dude!?')
-    })
-})
-
-describe('decodeRfc1342', () => {
-    it('decodes base64 encoded data', () => {
-        expect(decodeRfc1342('=?utf-8?B?W0V4dDpdIFdPUkRTMTIz?=')).toBe('[Ext:] WORDS123')
-    })
-    it('decodes Q-encoded data', () => {
-        expect(decodeRfc1342('=?utf-8?Q?word?=')).toBe('word')
-    })
-    it('decodes multiple encoded words in sequence', () => {
-        expect(decodeRfc1342('=?utf-8?Q?aeiou?= plus =?utf-8?B?w6XDpMO2?=')).toBe('aeiou plus åäö')
-    })
-})
-
-describe('decodeQEncoding', () => {
-    it('replaces underscores with spaces', () => {
-        expect(decodeQEncoding('a_b_c')).toBe('a b c')
-    })
-
-    it('replaces =20 with spaces (regardless of target encoding)', () => {
-        expect(decodeQEncoding('a=20b')).toBe('a b')
-    })
-
-    it('decodes hex values for =, _, and ?', ()=> {
-        expect(decodeQEncoding('=3D=5F=3F')).toBe('=_?')
-    })
-
-    it('decodes multibyte unicode beyond ascii', () => {
-        expect(decodeQEncoding('=E2=80=93=20=E2=80=98=3D=5F=3F')).toBe('– ‘=_?')
     })
 })

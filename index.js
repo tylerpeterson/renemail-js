@@ -5,6 +5,7 @@ import { readFile, rename } from 'fs/promises'
 import { parse, format } from 'date-fns'
 import { join, dirname, basename, extname } from 'path'
 import rfc2047 from 'rfc2047'
+const { decode } = rfc2047
 
 program
   .option('-D, --dry-run', "report what would be changed; don't make any changes")
@@ -111,7 +112,7 @@ export function getHeader(email, name) {
       DEBUG && console.log(`line ${i} found "${name}" in "${line}"`)
       const rawValue = line.slice(match[0].length)
       DEBUG && console.log(`discarding header name leaves "${rawValue}"`)
-      value = decodeRfc1342(rawValue)
+      value = decode(rawValue)
       for (let j = i + 1; j < lines.length; ++j) {
         line = lines[j]
         DEBUG && console.log(`checking for continued value on line ${j}, "${line}"`)
@@ -119,21 +120,13 @@ export function getHeader(email, name) {
           DEBUG && console.log(`line doesn't start with a space. terminating value scan`)
           break
         }
-        value += decodeRfc1342(line.slice(1))
+        value += decode(line.slice(1))
       }
       break
     }
   }
 
   return value
-}
-
-export function decodeRfc1342(input) {
-  return rfc2047.decode(input)
-}
-
-export function decodeQEncoding(input) {
-  return rfc2047.decode(`=?utf-8?Q?${input}?=`)
 }
 
 export function findSubject(text) {
