@@ -4,6 +4,7 @@ import { program } from 'commander'
 import { readFile, rename } from 'fs/promises'
 import { parse, format } from 'date-fns'
 import { join, dirname, basename, extname } from 'path'
+import rfc2047 from 'rfc2047'
 
 program
   .option('-D, --dry-run', "report what would be changed; don't make any changes")
@@ -128,40 +129,11 @@ export function getHeader(email, name) {
 }
 
 export function decodeRfc1342(input) {
-  const pattern = /(?<prefix>.*?)=\?utf-8\?(?<encoding>[BQ])\?(?<encodedText>[^ "(),./\[-\]:-<>-@\r\n]{1,75})\?=/iy
-  return decodeHelper(input, pattern, (match) => {
-    const encoding = match.groups.encoding.toUpperCase()
-    const encodedText = match.groups.encodedText
-    if (encoding === 'B') {
-      return Buffer.from(encodedText, 'base64').toString('utf8')
-    } else if (encoding === 'Q') {
-      return decodeQEncoding(encodedText)
-    }
-  })
+  return rfc2047.decode(input)
 }
 
 export function decodeQEncoding(input) {
-  input = input.replaceAll('_', ' ')
-  return decodeHelper(input, /(?<prefix>.*?)(?<hexBytes>(?:=[0-F]{2})+)/iy, (match) => {
-    const byteArray = match.groups.hexBytes.split('=')
-    byteArray.shift() // Discard empty string before the first equal sign
-    return Buffer.from(byteArray.join(''), 'hex').toString('utf8')
-  })
-}
-
-function decodeHelper(rawString, stickyPattern, decoder) {
-  let result = ''
-  let match = stickyPattern.exec(rawString)
-  let usedChars = 0
-  while (match !== null) {
-    usedChars = match.index + match[0].length
-    stickyPattern.lastIndex = usedChars
-    result += match?.groups?.prefix || ''
-    result += decoder(match)
-    match = stickyPattern.exec(rawString)
-  }
-  result += rawString.slice(usedChars)
-  return result
+  return rfc2047.decode(`=?utf-8?Q?${input}?=`)
 }
 
 export function findSubject(text) {
