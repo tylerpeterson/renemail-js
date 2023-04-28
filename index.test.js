@@ -1,4 +1,4 @@
-import { getHeader, summarizeFrom, findSubject } from ".";
+import { getHeader, summarizeFrom } from ".";
 
 const b64SubjectMsg = `MIME-Version: 1.0
 Subject:
@@ -41,16 +41,16 @@ describe('get sender', () => {
     })
 })
 
-describe('findSubject', () => {
+describe('get subject', () => {
     it('finds plain subjects', () => {
-        expect(findSubject(plainSubjectMsg)).toBe('Hello there!')
+        expect(getHeader(plainSubjectMsg, 'subject')).toBe('Hello there!')
     })
     
     it('finds base64 encoded subjects', () => {
-        expect(findSubject(b64SubjectMsg)).toBe(`[Ext:] WORDS123 | A–Zz`)
+        expect(getHeader(b64SubjectMsg, 'subject')).toBe(`[Ext:] WORDS123 | A–Zz`)
     })    
     
     it('finds subjects with mixed encoding', () => {
-        expect(findSubject(mixedSubjectMsg)).toBe('[Ext:] WORDS1234 Dude!?')
+        expect(getHeader(mixedSubjectMsg, 'subject')).toBe('[Ext:] WORDS1234 Dude!?')
     })
 })

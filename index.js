@@ -73,7 +73,7 @@ function computeName(file, filename) {
 }
 
 function summarizeSubject(file) {
-  const foundSubject = findSubject(file)
+  const foundSubject = getHeader(file, 'subject')
   let summary = foundSubject.replace(/\W+/g, '_')
   summary = summary.replace(/^_?((Re|Fwd|Fw|Ext)_)+_?/gi, '')
   summary = summary.substring(0, 45)
@@ -127,10 +127,6 @@ export function getHeader(email, name) {
   }
 
   return value
-}
-
-export function findSubject(text) {
-  return getHeader(text, 'subject')
 }
 
 renemail()
