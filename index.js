@@ -83,6 +83,7 @@ function summarizeSubject(file) {
 export function summarizeFrom(email) {
   const sender = getHeader(email, 'From').replaceAll(/[^@a-z0-9.]/ig, '')
   const domain = sender.split('@')[1]
+  DEBUG && console.log(`sender: "${sender}", domain: "${domain}"`)
   return `${sender.slice(0, 6)}-${domain.split('.').slice(-2).join('.').slice(0, 12)}`
 }
 
@@ -98,6 +99,7 @@ function computeDate(file) {
 }
 
 const ENDINGS_PATTERN = /\r\n|\r|\n/
+const CONTINUE_PATTERN = /^\s/
 
 export function getHeader(email, name) {
   DEBUG && console.log(`getHeader ${name}`)
@@ -116,7 +118,7 @@ export function getHeader(email, name) {
       for (let j = i + 1; j < lines.length; ++j) {
         line = lines[j]
         DEBUG && console.log(`checking for continued value on line ${j}, "${line}"`)
-        if (!line.startsWith(' ')) {
+        if (!CONTINUE_PATTERN.test(line)) {
           DEBUG && console.log(`line doesn't start with a space. terminating value scan`)
           break
         }
