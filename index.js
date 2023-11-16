@@ -93,7 +93,7 @@ const DATE_FORMATS = [
 ]
 
 function computeDate(file) {
-  const foundDate = file.match(/^Date: (?:\w+, )?(.*\d{4})( \(\w+\))?$/m)[1]
+  const foundDate = file.match(/^Date: (?:\w+, +)?(.*\d{4})( \(\w+\))?$/m)[1]
   const date = parse(foundDate, 'd LLL yyyy HH:mm:ss XXXX', new Date())
   return format(date, DATE_FORMATS[FORMAT - 1])
 }
